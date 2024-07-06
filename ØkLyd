@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Specify the input and output directories
+input_dir="/Volumes/500GB ExFAT/Begravelse/"
+output_dir="/Volumes/500GB ExFAT/Begravelse/Processed"
+
+# Create the output directory if it does not exist
+if ! mkdir -p "$output_dir"; then
+  echo "Failed to create output directory: $output_dir"
+  exit 1
+fi
+
+# Loop through all .MOV files in the input directory
+for input_file in "$input_dir"/*.MOV; do
+  # Check if there are no .MOV files
+  if [ "$input_file" == "$input_dir/*.MOV" ]; then
+    echo "No .MOV files found in the directory: $input_dir"
+    break
+  fi
+  
+  # Get the filename without the directory path
+  filename=$(basename -- "$input_file")
+  
+  # Define the output file path
+  output_file="$output_dir/$filename"
+  
+  # Apply highpass and lowpass filters, loudness normalization, noise reduction, and save the output file with video passthrough
+  ffmpeg -i "$input_file" -c:v copy -af "highpass=f=100, lowpass=f=10000, loudnorm=I=-16:LRA=11:TP=-1.5:linear=true:print_format=summary, anlmdn" -ar 44100 "$output_file"
+done
